@@ -193,6 +193,8 @@ class Trainer:
     def run_epoch(self):
         """Run a single epoch of training and validation
         """
+
+        ## mars comment in case of pytorch > 1.1
         self.model_lr_scheduler.step()
 
         print("Training")
@@ -224,6 +226,10 @@ class Trainer:
                 self.val()
 
             self.step += 1
+        
+        ## mars code start
+        #self.model_lr_scheduler.step()
+        ## mars code end
 
     def process_batch(self, inputs):
         """Pass a minibatch through the network and generate images and losses
