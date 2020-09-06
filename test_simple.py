@@ -58,8 +58,10 @@ def test_simple(args):
 
     if torch.cuda.is_available() and not args.no_cuda:
         device = torch.device("cuda")
+        print('cuda')
     else:
         device = torch.device("cpu")
+        print('cpu')
 
     download_model_if_doesnt_exist(args.model_name)
     model_path = os.path.join("models", args.model_name)

@@ -20,6 +20,8 @@ ARG CUDNN=7.6.2.24-1
 # Needed for string substitution
 SHELL ["/bin/bash", "-c"]
 
+ENV PROJECT=monodepth2
+
 # Pick up some TF dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
@@ -82,24 +84,28 @@ RUN apt-get install -y nano
 RUN apt-get install -y wget bzip2
 RUN apt-get install -y sudo
 
-
-# Add user ubuntu with no password, add to sudo group
-RUN adduser --disabled-password --gecos '' mars
-RUN adduser mars sudo
-RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-USER mars
-WORKDIR /home/mars/
-RUN chmod a+rwx /home/mars/
-#RUN echo `pwd`
-
-## ====================================
-## miniconda install and setup
-ENV SETUSER mars
-
 # Miniconda: get necessary files from build
 COPY --from=miniconda /opt/conda /opt/conda
-# Set correct permissions
-RUN sudo chown -R $SETUSER: /opt/conda
+
+RUN chmod a+rwx /root
+RUN sudo chown -R root: /opt/conda
+
+# # Add user ubuntu with no password, add to sudo group
+# RUN adduser --disabled-password --gecos '' mars
+# RUN adduser mars sudo
+# RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+# USER mars
+# WORKDIR /home/mars/
+# RUN chmod a+rwx /home/mars/
+# #RUN echo `pwd`
+
+# ## ====================================
+# ## miniconda install and setup
+# ENV SETUSER mars
+# # Set correct permissions
+# RUN sudo chown -R $SETUSER: /opt/conda
+
+
 #   New terminals will have conda active
 # If nvidia's Docker image has no .bashrc
 # COPY --from=miniconda /home/$SETUSER/.bashrc
@@ -133,14 +139,34 @@ SHELL ["/bin/bash", "-c"]
 # #==============================================================
 # # monodepth2 conda env setup
 # #==============================================================
-RUN source /opt/conda/etc/profile.d/conda.sh && \
-    conda update -n base -c defaults conda
+RUN source /opt/conda/etc/profile.d/conda.sh \
+    && conda update -n base -c defaults conda
 
 RUN source /opt/conda/etc/profile.d/conda.sh \
     && conda create -n monodepth2 python=3.6.6 \
     && conda activate monodepth2 \
-    && conda install pytorch=1.0.1 torchvision=0.2.2 -c pytorch \
-    && pip install tensorboardX==1.4  matplotlib \
-    && conda install opencv=3.3.1 \
-    && pip install scikit-image \
-    && pip install IPython \
+    && conda install pytorch=1.0.1 torchvision=0.2.2 -c pytorch
+
+RUN source /opt/conda/etc/profile.d/conda.sh \
+    && conda install opencv
+
+RUN source /opt/conda/etc/profile.d/conda.sh \
+    && pip install --no-cache-dir jupyter \
+    && pip install --no-cache-dir tensorboardX==1.4 \
+    && pip install --no-cache-dir matplotlib \
+    && pip install --no-cache-dir scikit-image \
+    && pip install --no-cache-dir IPython 
+
+# Expose Port for jupyter (8881)
+# Jtod
+EXPOSE 8881
+
+# create project workspace dir
+RUN sudo mkdir -p /workspace/experiments
+RUN sudo mkdir -p /workspace/${PROJECT}
+WORKDIR /workspace/${PROJECT}
+
+# Copy project source last (to avoid cache busting)
+WORKDIR /workspace/${PROJECT}
+COPY . /workspace/${PROJECT}
+ENV PYTHONPATH="/workspace/${PROJECT}:$PYTHONPATH"
