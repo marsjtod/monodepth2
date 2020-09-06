@@ -87,23 +87,23 @@ RUN apt-get install -y sudo
 # Miniconda: get necessary files from build
 COPY --from=miniconda /opt/conda /opt/conda
 
-RUN chmod a+rwx /root
-RUN sudo chown -R root: /opt/conda
+# RUN chmod a+rwx /root
+# RUN sudo chown -R root: /opt/conda
 
-# # Add user ubuntu with no password, add to sudo group
-# RUN adduser --disabled-password --gecos '' mars
-# RUN adduser mars sudo
-# RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-# USER mars
-# WORKDIR /home/mars/
-# RUN chmod a+rwx /home/mars/
-# #RUN echo `pwd`
+# Add user ubuntu with no password, add to sudo group
+RUN adduser --disabled-password --gecos '' mars
+RUN adduser mars sudo
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+USER mars
+WORKDIR /home/mars/
+RUN chmod a+rwx /home/mars/
+#RUN echo `pwd`
 
-# ## ====================================
-# ## miniconda install and setup
-# ENV SETUSER mars
-# # Set correct permissions
-# RUN sudo chown -R $SETUSER: /opt/conda
+## ====================================
+## miniconda install and setup
+ENV SETUSER mars
+# Set correct permissions
+RUN sudo chown -R $SETUSER: /opt/conda
 
 
 #   New terminals will have conda active
@@ -151,11 +151,11 @@ RUN source /opt/conda/etc/profile.d/conda.sh \
     && conda install opencv
 
 RUN source /opt/conda/etc/profile.d/conda.sh \
-    && pip install --no-cache-dir jupyter \
-    && pip install --no-cache-dir tensorboardX==1.4 \
-    && pip install --no-cache-dir matplotlib \
-    && pip install --no-cache-dir scikit-image \
-    && pip install --no-cache-dir IPython 
+    && pip install jupyter \
+    && pip install tensorboardX==1.4 \
+    && pip install matplotlib \
+    && pip install scikit-image \
+    && pip install IPython 
 
 # Expose Port for jupyter (8881)
 # Jtod
