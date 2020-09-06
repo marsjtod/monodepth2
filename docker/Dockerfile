@@ -87,34 +87,41 @@ RUN apt-get install -y sudo
 # Miniconda: get necessary files from build
 COPY --from=miniconda /opt/conda /opt/conda
 
-# RUN chmod a+rwx /root
-# RUN sudo chown -R root: /opt/conda
+#RUN chmod a+rwx /root
+#RUN sudo chown -R root: /opt/conda
 
-# Add user ubuntu with no password, add to sudo group
-RUN adduser --disabled-password --gecos '' mars
-RUN adduser mars sudo
-RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-USER mars
-WORKDIR /home/mars/
-RUN chmod a+rwx /home/mars/
-#RUN echo `pwd`
+# # Add user ubuntu with no password, add to sudo group
+# RUN adduser --disabled-password --gecos '' mars
+# RUN adduser mars sudo
+# RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+# USER mars
+# WORKDIR /home/mars/
+# RUN chmod a+rwx /home/mars/
+# #RUN echo `pwd`
 
-## ====================================
-## miniconda install and setup
-ENV SETUSER mars
-# Set correct permissions
-RUN sudo chown -R $SETUSER: /opt/conda
-
+# ## ====================================
+# ## miniconda install and setup
+# ENV SETUSER mars
+# # Set correct permissions
+# RUN sudo chown -R $SETUSER: /opt/conda
 
 #   New terminals will have conda active
 # If nvidia's Docker image has no .bashrc
 # COPY --from=miniconda /home/$SETUSER/.bashrc
 # else
-RUN echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
+
+# set path for conda
+ENV PATH /opt/conda/bin:$PATH
+
+RUN echo "source /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
     echo "conda activate monodepth2" >> ~/.bashrc
+
 
 # switch shell sh (default in Linux) to bash
 SHELL ["/bin/bash", "-c"]
+
+# make pip cache
+RUN cd /root && mkdir .cache && cd /root/.cache && mkdir pip
 
 # give bash access to Anaconda, then normal anaconda commands, e.g. (-q: quiet, -y: answer yes)
 ## ========================================================================
@@ -136,11 +143,13 @@ SHELL ["/bin/bash", "-c"]
 # ENV PATH /home/mars/anaconda3/bin:$PATH
 # RUN conda update --all
 
-# #==============================================================
-# # monodepth2 conda env setup
-# #==============================================================
-RUN source /opt/conda/etc/profile.d/conda.sh \
-    && conda update -n base -c defaults conda
+# # #==============================================================
+# # # monodepth2 conda env setup
+# # #==============================================================
+RUN conda update -n base -c defaults conda
+
+# RUN source /opt/conda/etc/profile.d/conda.sh \
+#     && conda update -n base -c defaults conda
 
 RUN source /opt/conda/etc/profile.d/conda.sh \
     && conda create -n monodepth2 python=3.6.6 \
@@ -151,11 +160,13 @@ RUN source /opt/conda/etc/profile.d/conda.sh \
     && conda install opencv
 
 RUN source /opt/conda/etc/profile.d/conda.sh \
+    && conda activate monodepth2 \
     && pip install jupyter \
     && pip install tensorboardX==1.4 \
     && pip install matplotlib \
     && pip install scikit-image \
     && pip install IPython 
+
 
 # Expose Port for jupyter (8881)
 # Jtod
