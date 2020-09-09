@@ -65,7 +65,7 @@ docker-shell: docker-build
 
 docker-jupyter: docker-build
 	docker run --gpus all ${DOCKER_OPTS} ${DOCKER_IMAGE} \
-		bash -c "source /opt/conda/etc/profile.d/conda.sh && jupyter notebook --port=8881 --ip=0.0.0.0 --allow-root --no-browser"
+		bash -c "source /opt/conda/etc/profile.d/conda.sh && conda activate monodepth2 && jupyter notebook --port=8881 --ip=0.0.0.0 --allow-root --no-browser"
 
 docker-run: docker-build
 	docker run --gpus all ${DOCKER_OPTS} ${DOCKER_IMAGE} \
